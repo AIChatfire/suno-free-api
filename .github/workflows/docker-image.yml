@@ -20,8 +20,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Print the repository name
-        run: echo "${{ github.event.inputs.image }}"
+      - name: Print xxx
+        run: echo "${{ github.repository.name}}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,9 +41,8 @@ jobs:
         with:
           context: .
           push: true
-#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository }}:latest
-          tags: ${{ github.event.inputs.image }}:latest
-#          tags: chatfire/suno-free-api:latest
+#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}:latest
+          tags: chatfire/suno-free-api:latest
 
 #          platforms: |
 #            linux/386
