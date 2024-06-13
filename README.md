@@ -1,6 +1,6 @@
-# 1. 获取 SUNO_API_KEY
+# 1. [获取 SUNO_API_KEY](https://suno.com/)
 
-![api_key.png](./api_key.png)
+![](docs/api_key.png)
 
 # 2. 拉取镜像
 
@@ -8,4 +8,6 @@
 docker run --name suno-free-api -d -p 8000:8000 chatfire/suno-free-api
 ```
 
+# 3. 接口文档
 
+![](docs/api_docs.png)
