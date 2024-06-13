@@ -20,6 +20,9 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Print the repository name
+        run: echo "The repository name is $GITHUB_REPOSITORY"
+
       - name: Checkout
         uses: actions/checkout@v4
       - name: Docker meta
