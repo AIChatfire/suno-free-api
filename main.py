@@ -7,22 +7,15 @@
 # @WeChat       : meutils
 # @Software     : PyCharm
 # @Description  :
-import os
-
-from meutils.pipe import *
-from meutils.notice.feishu import *
-
-send_message(os.getenv("API_KEY"))
 
 from meutils.serving.fastapi import App
-from chatllm.api.routers import chat_completions
+from suno.routers import v1
 
 app = App()
 
-app.include_router(chat_completions.router, '/v1')
+app.include_router(v1.router, '/suno')
 
 if __name__ == '__main__':
-    app.run(port=39999)
-
+    app.run()
 
 # python3 -m meutils.clis.server gunicorn-run smooth_app:app --pythonpath python3 --port 39006

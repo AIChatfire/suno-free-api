@@ -5,11 +5,13 @@ __pycache__
 .env
 .git
 .gitignore
+.gitattributes
 .project
 .settings
 .toolstarget
 .vs
 .vscode
+.idea
 *.*proj.user
 *.dbmdl
 *.jfm
@@ -23,19 +25,12 @@ npm-debug.log
 obj
 secrets.dev.yaml
 values.dev.yaml
+docker-compose.yml
 *.db
+*.md
 .python-version
 LICENSE
 
-# Common
-*.md
-docker-compose.yml
-Dockerfile*
 
-# JetBrains
-.idea
 
-# git
-.git
-.gitattributes
-.gitignore
+

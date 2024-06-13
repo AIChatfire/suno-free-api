@@ -31,6 +31,6 @@ USER appuser
 
 
 # 容器启动时运行命令
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
 
 
