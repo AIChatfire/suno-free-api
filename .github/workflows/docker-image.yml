@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print the repository name
-        run: echo "The repository name is $GITHUB_REPOSITORY"
+        run: echo "${{ github.event.inputs.image }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,7 +41,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository }}:latest
+#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository }}:latest
+          tags: ${{ github.event.inputs.image }}:latest
 #          tags: chatfire/suno-free-api:latest
 
 #          platforms: |
