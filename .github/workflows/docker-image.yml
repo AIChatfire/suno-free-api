@@ -22,7 +22,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-#          images: chatfire/suno-free-api # ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}
+          #          images: chatfire/suno-free-api # ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='Asia/Shanghai'}}
@@ -34,22 +34,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set tag name
-        id: tag_name
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "::set-output name=tag::${{ github.event.inputs.tag }}"
-          fi
-
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
 
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}:${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 #          platforms: |
 #            linux/386
