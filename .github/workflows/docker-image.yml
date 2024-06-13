@@ -40,8 +40,9 @@ jobs:
           context: .
           push: true
 
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}:latest
           labels: ${{ steps.meta.outputs.labels }}
+
 #          platforms: |
 #            linux/386
 #            linux/amd64
