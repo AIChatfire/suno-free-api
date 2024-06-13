@@ -1,29 +1,36 @@
 # 使用官方python基础镜像
 FROM python:3.10-slim
-#FROM api-reverse
+LABEL maintainer="313303303@qq.com"
+
+# Keeps Python from generating .pyc files in the container
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Turns off buffering for easier container logging
+ENV PYTHONUNBUFFERED=1
+
+# 暴露端口
+EXPOSE 8000
+
+
+# Install pip requirements
+COPY requirements.txt .
+RUN python -m pip install --no-cache-dir --upgrade -r requirements.txt
+
 
 # 创建工作目录
 WORKDIR /app
 
 # 复制当前目录下的所有文件到工作目录
-COPY . .
+COPY . /app
 
-# 安装python依赖
-RUN pip install --no-cache-dir -r requirements.txt -U -i https://mirror.baidu.com/pypi/simple
-RUN pip install --no-cache-dir chatllm --no-deps -U # -i https://mirror.baidu.com/pypi/simple
+# Creates a non-root user with an explicit UID and adds permission to access the /app folder
+RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
 
-# 暴露端口
-EXPOSE 8000
+
+
 
 # 容器启动时运行命令
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 
-#  => => naming to docker.io/library/api-reverse                                                                                                                                                                                     0.0s
-# docker run -p 8000:8000 -e GITHUB_COPILOT_TOKEN=123 chatllm/api-reverse
-# docker push chatllm/api-reverse
-# docker run -d -p 39999:8000 chatllm/api-reverse
-
-# docker tag apitool chatllm/api-tokens:chatfire # 重命名
-
-#docker run --name apitool -d -p 39966:80 chatllm/api-tokens
 
