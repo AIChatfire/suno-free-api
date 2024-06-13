@@ -7,21 +7,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-
-  #  build:
-  #
-  #    runs-on: ubuntu-latest
-  #
-  #    steps:
-  #      - uses: actions/checkout@v4
-  #      - name: Build the Docker image
-  #        run: docker build . --file Dockerfile --tag suno-free-api:$(TZ=Asia/Shanghai date "+%Y_%m_%d__%H_%M_%S")
-
   docker:
     runs-on: ubuntu-latest
     steps:
       - name: Print xxx
-        run: echo "${{ DOCKER_METADATA_OUTPUT_LABELS}}"
+        run: echo "${{ github.repository}}"
 
       - name: Checkout
         uses: actions/checkout@v4
