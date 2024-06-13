@@ -5,6 +5,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  release:
+    types: [ created ]
 
 jobs:
   docker:
@@ -15,6 +17,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -23,12 +26,14 @@ jobs:
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='Asia/Shanghai'}}
+
       - name: Login to DockerHub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
