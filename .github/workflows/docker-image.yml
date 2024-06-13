@@ -34,6 +34,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set tag name
+        id: tag_name
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
