@@ -24,7 +24,8 @@ jobs:
         with:
           #          images: chatfire/suno-free-api # ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}
           #          images: chatfire/image_name
-          images: ""
+#          images: ""
+          images: chatfire/${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}
 
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
@@ -43,7 +44,8 @@ jobs:
           context: .
           push: true
           labels: ${{ steps.meta.outputs.labels }}
-          tags: chatfire/${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}:${{ steps.meta.outputs.tags }}
+#          tags: chatfire/${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}:${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
 
 #          platforms: |
 #            linux/386
