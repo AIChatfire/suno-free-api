@@ -29,7 +29,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: chatfire/suno-free-api
+          images: chatfire/suno-free-api # ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='Asia/Shanghai'}}
       - name: Login to DockerHub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
@@ -41,10 +44,8 @@ jobs:
         with:
           context: .
           push: true
-          #          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}:latest
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='Asia/Shanghai'}}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 #          platforms: |
 #            linux/386
 #            linux/amd64
