@@ -92,7 +92,7 @@ def api_billing_info(api_key):
 
 
 if __name__ == '__main__':
-    api_key = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNsaWVudF8yaDhXTEF5a0F2Q0hDaDc0QWNmT084UFZKY0giLCJyb3RhdGluZ190b2tlbiI6ImpkanRicW5obHFrMDE3MXVtaXpleTE3MjI3dm8wcXR0Y3Z3dnk2bDEifQ.YOwf2UMfq5WnqLxlLtjqjlfpYp-kMy6XYAVXJzWP5xwFvZh4bZ2ANMOT6YcFIe_GDb5wWWYEoZ_e_9dlV_X3CeMYezgvHf4mWWibJhDntjy4X1SdfEKf73VzsQ9_tXHMBXUEnMr6YTrCrPrJ3z6uZEZWgkIrNMAViW5xo5gX0l1H26Ro7Qoyjox8QFn4INQUL1F1GjtZjObycRpChsyCYWCPstdDzBDOJmwl4r_aSFpxnLBmGHDxIsCOB9q_WMyMMvwW9W5HbS0pg6yLUxpNTsgx1ozqTb698WSg0fjuA15bNNH7zL5le9dvyHwCcgbnaYjbj0ri6_sZp17IN-1tDg"
+    api_key = os.getenv("SUNO_API_KEY")
 
     # print(refresh_token(api_key))
     # print(get_access_token(api_key))
