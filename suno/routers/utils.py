@@ -34,7 +34,6 @@ def get_refresh_token(api_key):  # 定时更新一次就行
     return response.text
 
 
-@lru_cache()
 def get_access_token(api_key):
     last_active_token, last_active_session_id = get_refresh_token(api_key)  # last_active_token 没啥用
 
