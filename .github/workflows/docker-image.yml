@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print xxx
-        run: echo "${{ github.repository.name}}"
+        run: echo "${{ DOCKER_METADATA_OUTPUT_LABELS}}"
 
       - name: Checkout
         uses: actions/checkout@v4
