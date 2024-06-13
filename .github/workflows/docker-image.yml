@@ -38,7 +38,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: latest
+          tags: ${{ github.repository }}:latest
+#          tags: chatfire/suno-free-api:latest
+
 #          platforms: |
 #            linux/386
 #            linux/amd64
