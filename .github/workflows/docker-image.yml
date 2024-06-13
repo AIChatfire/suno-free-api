@@ -22,7 +22,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: chatfire/suno-free-api # ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}
+#          images: chatfire/suno-free-api # ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.repository}}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='Asia/Shanghai'}}
@@ -48,7 +48,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.title'] }}:${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 #          platforms: |
 #            linux/386
