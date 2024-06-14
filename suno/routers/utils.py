@@ -10,7 +10,7 @@
 
 import jsonpath
 from meutils.pipe import *
-from meutils.schemas.suno_types import _CLERK_JS_VERSION, BASE_URL, API_GENERATE_V2, API_FEED, API_BILLING_INFO
+from meutils.schemas.suno_types import BASE_URL, API_SESSION, API_GENERATE_V2, API_FEED, API_BILLING_INFO, MODELS
 
 
 def get_refresh_token(api_key):  # 定时更新一次就行
@@ -21,23 +21,25 @@ def get_refresh_token(api_key):  # 定时更新一次就行
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
         "Cookie": f"__client={api_key}"
     }
-    url = f"https://clerk.suno.com/v1/client?_clerk_js_version={_CLERK_JS_VERSION}"
+    # url = f"https://clerk.suno.com/v1/client?_clerk_js_version={_CLERK_JS_VERSION}"
+    url = f"https://clerk.suno.com/v1/client"
 
     response = httpx.get(url, headers=headers)
+    logger.debug(response.text)
     if response.status_code == 200:
         obj = response.json()
-        last_active_token = jsonpath.jsonpath(obj, "$..jwt")[0]
+        # last_active_token = jsonpath.jsonpath(obj, "$..jwt")[0]
         last_active_session_id = jsonpath.jsonpath(obj, "$..last_active_session_id")[0]
 
-        return last_active_token, last_active_session_id
+        return last_active_session_id
 
     return response.text
 
-
 def get_access_token(api_key):
-    last_active_token, last_active_session_id = get_refresh_token(api_key)  # last_active_token 没啥用
+    last_active_session_id = get_refresh_token(api_key)  # last_active_token 没啥用
 
-    url = f"https://clerk.suno.com/v1/client/sessions/{last_active_session_id}/tokens?_clerk_js_version={_CLERK_JS_VERSION}"
+    # url = f"https://clerk.suno.com/v1/client/sessions/{last_active_session_id}/tokens?_clerk_js_version={_CLERK_JS_VERSION}"
+    url = f"https://clerk.suno.com/v1/client/sessions/{last_active_session_id}/tokens"
 
     headers = {
         # "Authorization": f"Bearer {last_active_token}",
@@ -88,6 +90,20 @@ def api_billing_info(api_key):
     response = httpx_client.get(API_BILLING_INFO)
     if response.status_code == 200:
         return response.json()  # total_credits_left
+    return response.text
+
+
+def api_session(api_key):
+    access_token = get_access_token(api_key)
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+    }
+    httpx_client = httpx.Client(base_url=BASE_URL, headers=headers)
+
+    response = httpx_client.get(API_SESSION)
+    if response.status_code == 200:
+        return response.json()['models'] or MODELS
     return response.text
 
 
