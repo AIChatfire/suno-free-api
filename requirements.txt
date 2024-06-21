@@ -9,3 +9,5 @@ openai
 tiktoken
 langchain
 websocket
+
+redis
