@@ -9,11 +9,11 @@
 # @Description  :
 
 from meutils.serving.fastapi import App
-from suno.routers import v1
+from suno.routers import chatfire_api
 
 app = App()
 
-app.include_router(v1.router, '/suno')
+app.include_router(chatfire_api.router, '/suno')
 
 if __name__ == '__main__':
     app.run()

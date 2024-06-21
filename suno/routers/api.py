@@ -6,7 +6,7 @@
 # @Author       : betterme
 # @WeChat       : meutils
 # @Software     : PyCharm
-# @Description  :
+# @Description  : 原生api
 
 
 from meutils.pipe import *
@@ -15,7 +15,8 @@ from meutils.schemas.suno_types import SunoAIRequest, API_GENERATE_V2, API_FEED,
 
 from fastapi import APIRouter, Depends
 
-from suno.controllers.utils import api_generate_v2, api_feed, api_billing_info
+from suno.controllers.utils import api_feed, api_billing_info
+from suno.controllers.utils import aapi_generate_v2
 
 router = APIRouter()
 
@@ -40,7 +41,9 @@ async def suno_api_generate_v2(
 
     data = request.model_dump()
 
-    return api_generate_v2(**data)
+    task = await aapi_generate_v2(api_key, data)
+
+    return task
 
 
 @router.get(API_FEED)
