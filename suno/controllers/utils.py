@@ -199,6 +199,8 @@ async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步�
     logger.debug(f"task_id: {task_id}")
     logger.debug(f"music_ids: {music_ids}")
 
+    send_message(f"https://api.chatfire.cn/task/suno/v1/music/{music_ids}")
+
     while 1:
         await asyncio.sleep(10)
         logger.debug(f"异步获取歌曲\n{music_ids}")
@@ -207,25 +209,30 @@ async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步�
 
         if all(song.get('status') in {'streaming', 'complete'} for song in songs):  # 歌词生成就返回，没必要 complete
             for song in songs:
+                song_id = song.get('id')
                 song['status'] = 'complete'
+                song['audio_url'] = f"https://cdn1.suno.ai/{song_id}.mp3"
+                song['video_url'] = f"https://cdn1.suno.ai/{song_id}.mp4"
 
-                await redis_aclient.set(f"suno:music:{song.get('id')}", json.dumps(song), ex=3600 * 24 * 100)
+                await redis_aclient.set(f"suno:music:{song_id}", json.dumps(song), ex=3600 * 24 * 100)
             await redis_aclient.set(f"suno:task:{task_id}", json.dumps(songs), ex=3600 * 24 * 100)
 
             logger.debug(f"异步获取歌曲: 成功\n{music_ids}")
             return
 
 
-def api_feed_music_from_redis(music_ids):
+@alru_cache(ttl=5)
+async def api_feed_music_from_redis(music_ids):
     songs = []
     for id in music_ids.split(','):
-        song = redis_client.get(f"suno:music:{id}")
+        song = await redis_aclient.get(f"suno:music:{id}")
         song = song and json.loads(song)
         songs.append(song)
 
     return songs
 
 
+@alru_cache(ttl=5)
 async def api_feed_task_from_redis(task_id):
     _ = await redis_aclient.get(f"suno:task:{task_id}")
     return _ and json.loads(_)

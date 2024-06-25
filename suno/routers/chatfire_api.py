@@ -34,7 +34,7 @@ async def get_music(task_id):
 
 @router.get("/music/{music_ids}")
 async def get_music(music_ids):
-    return api_feed_music_from_redis(music_ids)
+    return await api_feed_music_from_redis(music_ids)
 
 
 @router.post('/generation')
@@ -42,7 +42,6 @@ async def generate_music(
         request: SunoAIRequest,
         backgroundtasks: BackgroundTasks,
         auth: Optional[HTTPAuthorizationCredentials] = Depends(get_bearer_token),
-
 ):
     api_key = auth and auth.credentials or None
 
@@ -54,7 +53,6 @@ async def generate_music(
     task_info = await aapi_generate_v2(suno_token, data)
 
     if task_info.get("status") == "complete":
-        logger.debug('xxx')
         await appu('ppu-1', api_key=api_key)
         task_id = task_info.get('id', 'task_id')
         music_ids = jsonpath.jsonpath(task_info, "$.clips..id") | xjoin(',')
