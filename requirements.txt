@@ -3,6 +3,7 @@ jsonpath
 
 fastapi
 uvicorn
+gunicorn
 
 openai
 tiktoken
