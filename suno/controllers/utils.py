@@ -9,11 +9,23 @@
 # @Description  : todo: 轮询、redis统一任务、转存oss【优化重构】
 
 import jsonpath
+import json_repair
+
 from meutils.pipe import *
-from meutils.db.redis_db import redis_client
-from meutils.schemas.suno_types import BASE_URL, API_SESSION, API_GENERATE_V2, API_FEED, API_BILLING_INFO, MODELS
+from meutils.db.redis_db import redis_client, redis_aclient
+from meutils.schemas.openai_types import ChatCompletionRequest
+from meutils.schemas.suno_types import SunoAIRequest, BASE_URL, API_SESSION, API_GENERATE_V2, API_FEED, \
+    API_BILLING_INFO, MODELS
 from meutils.config_utils.lark_utils import aget_spreadsheet_values
-from meutils.notice.feishu import send_message
+from meutils.notice.feishu import send_message as _send_message
+from meutils.llm.openai_utils import appu
+from meutils.async_utils import async_to_sync
+
+send_message = partial(
+    _send_message,
+    title="音乐生成",
+    url="https://open.feishu.cn/open-apis/bot/v2/hook/c903e9a7-ece0-4b98-b395-0e1f6a1fb31e"
+)
 
 
 def get_refresh_token(api_key):  # 定时更新一次就行
@@ -183,53 +195,40 @@ def api_session(api_key):
 
 
 # 歌曲统一管理
-async def api_feed_to_redis(api_key, ids: str):
+async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步通用化
+    logger.debug(f"task_id: {task_id}")
+    logger.debug(f"music_ids: {music_ids}")
+
     while 1:
         await asyncio.sleep(10)
-        logger.debug(f"异步获取歌曲\n{ids}")
+        logger.debug(f"异步获取歌曲\n{music_ids}")
 
-        songs = await aapi_feed(api_key, ids)  # 15s 请求一次
+        songs = await aapi_feed(api_key, music_ids)  # 15s 请求一次
 
-        if all(song.get('status') == 'streaming' for song in songs):  # 歌词生成就返回，没必要 complete
+        if all(song.get('status') in {'streaming', 'complete'} for song in songs):  # 歌词生成就返回，没必要 complete
             for song in songs:
-                redis_client.set(f"suno:{song.get('id')}", json.dumps(song), ex=3600 * 24 * 100)
+                song['status'] = 'complete'
 
-            logger.debug(f"异步获取歌曲: 成功")
+                await redis_aclient.set(f"suno:music:{song.get('id')}", json.dumps(song), ex=3600 * 24 * 100)
+            await redis_aclient.set(f"suno:task:{task_id}", json.dumps(songs), ex=3600 * 24 * 100)
+
+            logger.debug(f"异步获取歌曲: 成功\n{music_ids}")
             return
 
 
-def api_feed_from_redis(ids):
+def api_feed_music_from_redis(music_ids):
     songs = []
-    for id in ids.split(','):
-        song = redis_client.get(f"suno:{id}")
+    for id in music_ids.split(','):
+        song = redis_client.get(f"suno:music:{id}")
         song = song and json.loads(song)
         songs.append(song)
 
     return songs
 
 
-#
-# async def api_feed_to_redis(api_key, ids):
-#     song_ids = ids.strip().split(',')
-#
-#     songs = []
-#     for song_id in song_ids:
-#         song = redis_client.get(f"suno:{song_id}")
-#         if song:
-#             songs.append(json.loads(song))
-#         else:
-#             while 1:
-#                 _songs = await aapi_feed(api_key, song_id)  # 15s 请求一次
-#
-#                 logger.debug(f"拉取歌曲{song_id}")
-#
-#                 if _songs[-1].get("status") == 'complete':
-#                     redis_client.set(f"suno:{song_id}", json.dumps(_songs[-1]), ex=3600 * 24 * 100)
-#                     songs += _songs
-#                     break
-#
-#     logger.debug(songs)
-#     return songs
+async def api_feed_task_from_redis(task_id):
+    _ = await redis_aclient.get(f"suno:task:{task_id}")
+    return _ and json.loads(_)
 
 
 # 轮询api-keys
@@ -246,35 +245,6 @@ async def get_api_key():
         except Exception as e:
             logger.debug(e)
             send_message(f"{e}\n\n{api_key}", title="suno cookies失效或者余额不足")
-
-
-def song_info(df):
-    """
-    #   'audio_url': 'https://cdn1.suno.ai/63c85335-d8ec-4e17-882a-e51c2f358b2d.mp3',
-    #   'video_url': 'https://cdn1.suno.ai/25c7e34b-6986-4f7c-a5f2-537dd80e370c.mp4',
-    # https://cdn1.suno.ai/image_bea09d9e-be4a-4c27-a0bf-67c4a92d6e16.png
-    :param df:
-    :return:
-    """
-    df['🎵音乐链接'] = df['id'].map(
-        lambda x: f"**请两分钟后试听**[🎧音频](https://cdn1.suno.ai/{x}.mp3)[▶️视频](https://cdn1.suno.ai/{x}.mp4)"
-    )
-    df['专辑图'] = df['id'].map(lambda x: f"![🖼](https://cdn1.suno.ai/image_{x}.png)")
-
-    df_ = df[["id", "created_at", "model_name", "🎵音乐链接", "专辑图"]]
-
-    return f"""
-🎵 **「{df['title'][0]}」**
-
-`风格: {df['tags'][0]}`
-
-```toml
-{df['prompt'][0]}
-```
-
-
-{df_.to_markdown(index=False).replace('|:-', '|-').replace('-:|', '-|')}
-    """
 
 
 if __name__ == '__main__':
@@ -329,4 +299,5 @@ if __name__ == '__main__':
     #     print(api_billing_info(api_key))
     #     time.sleep(60)
 
-    print(arun(get_api_key()))
+    # print(arun(get_api_key()))
+    api_feed_to_redis

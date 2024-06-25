@@ -13,7 +13,7 @@ from suno.routers import chatfire_api
 
 app = App()
 
-app.include_router(chatfire_api.router, '/suno')
+app.include_router(chatfire_api.router, '/task/suno/v1')
 
 if __name__ == '__main__':
     app.run()

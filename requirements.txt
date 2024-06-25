@@ -3,7 +3,6 @@ jsonpath
 
 fastapi
 uvicorn
-sse_starlette
 
 openai
 tiktoken
@@ -11,3 +10,4 @@ langchain
 websocket
 
 redis
+json_repair
