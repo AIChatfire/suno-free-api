@@ -14,8 +14,8 @@ import json_repair
 from meutils.pipe import *
 from meutils.db.redis_db import redis_client, redis_aclient
 from meutils.schemas.openai_types import ChatCompletionRequest
-from meutils.schemas.suno_types import SunoAIRequest, BASE_URL, API_SESSION, API_GENERATE_V2, API_FEED, \
-    API_BILLING_INFO, MODELS
+from meutils.schemas.suno_types import SunoAIRequest, BASE_URL, API_SESSION, API_FEED, \
+    API_BILLING_INFO, MODELS, API_GENERATE_LYRICS, API_GENERATE_V2
 from meutils.config_utils.lark_utils import aget_spreadsheet_values
 from meutils.notice.feishu import send_message as _send_message
 from meutils.llm.openai_utils import appu
@@ -199,7 +199,11 @@ async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步�
     logger.debug(f"task_id: {task_id}")
     logger.debug(f"music_ids: {music_ids}")
 
-    send_message(f"https://api.chatfire.cn/task/suno/v1/music/{music_ids}")
+    send_message(f"""
+    https://api.chatfire.cn/task/suno/v1/tasks/{task_id}
+    
+    https://api.chatfire.cn/task/suno/v1/music/{music_ids}
+    """)
 
     while 1:
         await asyncio.sleep(10)
@@ -252,6 +256,22 @@ async def get_api_key():
         except Exception as e:
             logger.debug(e)
             send_message(f"{e}\n\n{api_key}", title="suno cookies失效或者余额不足")
+
+
+@alru_cache(ttl=15)
+async def generate_lyrics(api_key, prompt=""):
+    access_token = await aget_access_token(api_key)
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    async with httpx.AsyncClient(base_url=BASE_URL, headers=headers, timeout=30) as client:
+        response = await client.post(API_GENERATE_LYRICS, json={"prompt": prompt})
+        if response.is_success:
+            task_id = response.json().get("id")
+            response = await client.get(API_GENERATE_LYRICS + task_id)
+            if response.is_success and response.json().get("status") == "complete":
+                return response.json()
 
 
 if __name__ == '__main__':
