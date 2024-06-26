@@ -7,6 +7,7 @@
 # @WeChat       : meutils
 # @Software     : PyCharm
 # @Description  : todo: 轮询、redis统一任务、转存oss【优化重构】
+import asyncio
 
 import jsonpath
 import json_repair
@@ -265,13 +266,19 @@ async def generate_lyrics(api_key, prompt=""):
         "Authorization": f"Bearer {access_token}",
     }
 
-    async with httpx.AsyncClient(base_url=BASE_URL, headers=headers, timeout=30) as client:
+    async with httpx.AsyncClient(base_url=BASE_URL, headers=headers, timeout=60) as client:
         response = await client.post(API_GENERATE_LYRICS, json={"prompt": prompt})
         if response.is_success:
             task_id = response.json().get("id")
-            response = await client.get(API_GENERATE_LYRICS + task_id)
-            if response.is_success and response.json().get("status") == "complete":
-                return response.json()
+
+            for i in range(20):
+                await asyncio.sleep(3)
+                response = await client.get(API_GENERATE_LYRICS + task_id)
+
+                logger.debug(response.text)
+
+                if response.is_success and response.json().get("status") == "complete":
+                    return response.json()
 
 
 if __name__ == '__main__':

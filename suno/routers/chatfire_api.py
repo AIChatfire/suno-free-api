@@ -11,13 +11,13 @@
 import jsonpath
 from meutils.pipe import *
 from meutils.serving.fastapi.dependencies.auth import get_bearer_token, HTTPAuthorizationCredentials
-from meutils.schemas.suno_types import SunoAIRequest, API_GENERATE_V2, API_FEED, API_BILLING_INFO, MODELS
+from meutils.schemas.suno_types import SunoAIRequest, LyricsRequest, API_GENERATE_V2, API_FEED, API_BILLING_INFO, MODELS
 from meutils.llm.openai_utils import appu, create_chat_completion_chunk
 
 from suno.controllers.utils import aapi_generate_v2, get_api_key, api_feed_to_redis, send_message, generate_lyrics
 from suno.controllers.utils import api_feed_task_from_redis, api_feed_music_from_redis
 
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
 
 router = APIRouter()
 
@@ -69,16 +69,16 @@ async def generate_music(
     return task_info
 
 
-@router.get('/lyrics/generation')
+@router.post('/lyrics/generation')
 async def generate_lyrics_(
-        prompt: str,
+        request: LyricsRequest,
         backgroundtasks: BackgroundTasks,
         auth: Optional[HTTPAuthorizationCredentials] = Depends(get_bearer_token),
 ):
     api_key = auth and auth.credentials or None
 
     suno_token = await get_api_key()
-    response = await generate_lyrics(suno_token, prompt)
+    response = await generate_lyrics(suno_token, request.prompt)
 
     await appu('ppu-001', api_key=api_key)
     return response
