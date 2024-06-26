@@ -200,11 +200,9 @@ async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步�
     logger.debug(f"task_id: {task_id}")
     logger.debug(f"music_ids: {music_ids}")
 
-    send_message(f"""
-    https://api.chatfire.cn/task/suno/v1/tasks/{task_id}
-    
-    https://api.chatfire.cn/task/suno/v1/music/{music_ids}
-    """)
+    send_message(
+        f"https://api.chatfire.cn/task/suno/v1/tasks/{task_id}\n\nhttps://api.chatfire.cn/task/suno/v1/music/{music_ids}"
+    )
 
     while 1:
         await asyncio.sleep(10)
@@ -334,4 +332,8 @@ if __name__ == '__main__':
     #     time.sleep(60)
 
     # print(arun(get_api_key()))
-    api_feed_to_redis
+    task_id = music_ids = 1
+    send_message(f"""
+        https://api.chatfire.cn/task/suno/v1/tasks/{task_id}
+        https://api.chatfire.cn/task/suno/v1/music/{music_ids}
+        """)
