@@ -226,7 +226,6 @@ async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步�
         await redis_aclient.set(f"suno:task:{task_id}", json.dumps(songs), ex=3600 * 24 * 100)
 
         logger.debug(f"异步获取歌曲: 成功\n{music_ids}")
-        return
 
 
 @alru_cache(ttl=5)

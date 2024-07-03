@@ -5,6 +5,9 @@
 # 2. 拉取镜像
 
 ```shell
+NAME=docker.1panel.live/chatfire/suno-free-api
+docker pull $NAME && docker tag $NAME chatfire/suno-free-api && docker rmi $NAME 
+
 docker run --name suno-free-api -d -p 8000:8000 chatfire/suno-free-api
 ```
 
