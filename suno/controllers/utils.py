@@ -8,6 +8,7 @@
 # @Software     : PyCharm
 # @Description  : todo: 轮询、redis统一任务、转存oss【优化重构】
 import asyncio
+import time
 
 import jsonpath
 import json_repair
@@ -204,24 +205,28 @@ async def api_feed_to_redis(api_key, task_id, music_ids: str):  # todo: 异步�
         f"https://api.chatfire.cn/task/suno/v1/tasks/{task_id}\n\nhttps://api.chatfire.cn/task/suno/v1/music/{music_ids}"
     )
 
+    s = time.time()
     while 1:
-        await asyncio.sleep(10)
+        if time.time() - s > 360: return
+        await asyncio.sleep(5)
         logger.debug(f"异步获取歌曲\n{music_ids}")
 
         songs = await aapi_feed(api_key, music_ids)  # 15s 请求一次
+        songs = songs or []
 
-        if all(song.get('status') in {'streaming', 'complete'} for song in songs):  # 歌词生成就返回，没必要 complete
-            for song in songs:
-                song_id = song.get('id')
-                song['status'] = 'complete'
-                song['audio_url'] = f"https://cdn1.suno.ai/{song_id}.mp3"
-                song['video_url'] = f"https://cdn1.suno.ai/{song_id}.mp4"
+        STATUS = {"streaming", "complete", "error"}  # submitted queued streaming complete/error
+        for song in songs:
+            song_id = song.get('id')
+            song['audio_url'] = f"https://cdn1.suno.ai/{song_id}.mp3"
+            song['video_url'] = f"https://cdn1.suno.ai/{song_id}.mp4"
 
-                await redis_aclient.set(f"suno:music:{song_id}", json.dumps(song), ex=3600 * 24 * 100)
-            await redis_aclient.set(f"suno:task:{task_id}", json.dumps(songs), ex=3600 * 24 * 100)
+            logger.debug(f"异步获取歌曲\n{song_id}\n{song.get('status')}")
 
-            logger.debug(f"异步获取歌曲: 成功\n{music_ids}")
-            return
+            await redis_aclient.set(f"suno:music:{song_id}", json.dumps(song), ex=3600 * 24 * 100)
+        await redis_aclient.set(f"suno:task:{task_id}", json.dumps(songs), ex=3600 * 24 * 100)
+
+        logger.debug(f"异步获取歌曲: 成功\n{music_ids}")
+        return
 
 
 @alru_cache(ttl=5)
@@ -250,7 +255,7 @@ async def get_api_key():
         api_key = np.random.choice(api_keys)
         try:
             billing_info = await aapi_billing_info(api_key)
-            if billing_info['total_credits_left'] > 10:
+            if billing_info['total_credits_left'] >= 10:
                 return api_key
         except Exception as e:
             logger.debug(e)
@@ -269,8 +274,8 @@ async def generate_lyrics(api_key, prompt=""):
         if response.is_success:
             task_id = response.json().get("id")
 
-            for i in range(20):
-                await asyncio.sleep(3)
+            for i in range(100):
+                await asyncio.sleep(1)
                 response = await client.get(API_GENERATE_LYRICS + task_id)
 
                 logger.debug(response.text)
